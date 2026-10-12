@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Taskly – Asisten Tugas Mahasiswa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F6FB;--card:#fff;--ink:#0F172A;--mute:#5B6B82;--line:#D9E1EC;--acc:#0D9488;--accsoft:#CCF3EE;--warn:#B45309;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F172A;--card:#1E293B;--ink:#F8FAFC;--mute:#A9B8CE;--line:#334155;--acc:#2DD4BF;--accsoft:#134E4A;--warn:#FBBF24}}
+:root[data-theme="dark"]{--bg:#0F172A;--card:#1E293B;--ink:#F8FAFC;--mute:#A9B8CE;--line:#334155;--acc:#2DD4BF;--accsoft:#134E4A;--warn:#FBBF24}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 20px 64px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.02em}.logo i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--acc);margin-right:8px}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.1;letter-spacing:-.03em;margin:0 0 14px;max-width:16ch}
+.lead{color:var(--mute);max-width:56ch;margin:0 0 28px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:20px}
+h2{font-size:19px;margin:0 0 12px;letter-spacing:-.01em}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:30px 16px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.on,.drop:focus-visible{border-color:var(--acc);background:var(--accsoft);outline:none}
+.drop b{display:block;font-size:17px}.drop span{color:var(--mute);font-size:14px}
+textarea{width:100%;min-height:120px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 18px;cursor:pointer;background:var(--acc);color:#fff}
+button.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button:not(.g){color:#0F172A}}
+:root[data-theme="dark"] button:not(.g){color:#0F172A}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.msg{font-size:14px;color:var(--mute);margin-top:10px}.err{color:var(--warn)}
+#result{display:none}
+ul.t{margin:0;padding-left:20px}ul.t li{margin:6px 0}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:6px 0 4px}.bar div{height:100%;width:0;background:var(--acc);transition:width .3s}
+ol.steps{list-style:none;margin:18px 0 0;padding:0 0 0 0;position:relative}
+ol.steps::before{content:"";position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:var(--line)}
+ol.steps li{position:relative;padding:8px 0 8px 44px}
+ol.steps input{position:absolute;left:0;top:10px;width:28px;height:28px;margin:0;appearance:none;border-radius:50%;border:2px solid var(--line);background:var(--card);cursor:pointer;display:grid;place-content:center}
+ol.steps input:checked{background:var(--acc);border-color:var(--acc)}
+ol.steps input:checked::after{content:"✓";color:#fff;font-weight:800;font-size:15px}
+ol.steps label{cursor:pointer}ol.steps li.done label{color:var(--mute);text-decoration:line-through}
+.note{font-size:13px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo"><i></i>Taskly</div><button class="g" id="theme" aria-label="Ganti tema">Ganti tema</button></header>
+
+<section>
+<h1>Bingung mulai tugas dari mana?</h1>
+<p class="lead">Unggah instruksi tugasmu. Taskly meringkasnya, menyusun daftar pekerjaan, dan memberi langkah pengerjaan yang bisa kamu centang satu per satu.</p>
+<div class="card">
+<h2>Unggah instruksi tugas</h2>
+<div class="drop" id="drop" tabindex="0" role="button" aria-label="Pilih file instruksi tugas">
+<b id="dname">Tarik file ke sini atau klik untuk memilih</b><span>PDF, gambar, atau teks (.txt)</span>
+<input type="file" id="file" accept=".pdf,.txt,image/*" hidden>
+</div>
+<textarea id="txt" placeholder="Atau tempel teks instruksi tugas di sini. Untuk file gambar, tempel teksnya di sini."></textarea>
+<div class="row"><button id="go">Analisis tugas</button><button class="g" id="sample">Pakai contoh</button></div>
+<p class="msg" id="msg" role="status"></p>
+</div>
+</section>
+
+<section id="result">
+<div class="card"><h2>Ringkasan</h2><p id="sum" style="margin:0"></p><p class="note" id="dl" style="margin:10px 0 0"></p></div>
+<div class="card"><h2>Daftar pekerjaan</h2><ul class="t" id="tasks"></ul></div>
+<div class="card"><h2>Panduan pengerjaan</h2>
+<div class="bar" aria-hidden="true"><div id="fill"></div></div><div class="note" id="pct"></div>
+<ol class="steps" id="steps"></ol>
+<div class="row"><button class="g" id="reset">Mulai ulang progres</button></div>
+<p class="note">Progres tersimpan di browser ini (localStorage), tanpa akun. Periksa hasil analisis sebelum dijadikan acuan akhir.</p></div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const KEY="taskly:v1";
+let state={text:"",summary:"",deadline:"",tasks:[],steps:[],done:[]};
+const store={get(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}},
+ set(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}}};
+
+/* Tema */
+$("theme").onclick=()=>{const r=document.documentElement,d=matchMedia("(prefers-color-scheme:dark)").matches;
+ const cur=r.dataset.theme||(d?"dark":"light");r.dataset.theme=cur==="dark"?"light":"dark"};
+
+/* Upload */
+const drop=$("drop"),file=$("file");
+drop.onclick=()=>file.click();
+drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();file.click()}};
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("on")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("on")}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files[0])handle(e.dataTransfer.files[0])});
+file.onchange=()=>file.files[0]&&handle(file.files[0]);
+
+function say(t,bad){$("msg").textContent=t;$("msg").className="msg"+(bad?" err":"")}
+
+async function handle(f){
+ $("dname").textContent=f.name;
+ if(f.size>10*1024*1024){say("File lebih dari 10 MB. Pilih file yang lebih kecil.",1);return}
+ if(f.type.startsWith("image/")){say("Gambar belum bisa dibaca otomatis. Tempel teks instruksinya di kolom di bawah, lalu klik Analisis tugas.",1);return}
+ try{
+  say("Membaca file…");
+  if(f.name.toLowerCase().endsWith(".pdf")){
+   const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;let out="";
+   for(let i=1;i<=pdf.numPages;i++){const c=await(await pdf.getPage(i)).getTextContent();out+=c.items.map(x=>x.str).join(" ")+"\n"}
+   if(out.trim().length<20)throw new Error("empty");
+   $("txt").value=out.trim();
+  }else{$("txt").value=await f.text()}
+  say("File terbaca. Klik Analisis tugas untuk melanjutkan.");
+ }catch(e){say("File tidak terbaca (mungkin PDF hasil scan). Coba file lain atau tempel teksnya di kolom di bawah.",1)}
+}
+
+/* Analisis lokal. Titik sambung untuk NLP Hugging Face: ganti isi analyze() dengan panggilan model. */
+const VERBS="buat|buatlah|jelaskan|analisis|analisislah|susun|susunlah|rancang|rancanglah|implementasikan|tulis|tuliskan|hitung|hitunglah|kerjakan|presentasikan|kumpulkan|unggah|upload|bandingkan|identifikasi|cari|carilah|diskusikan|simpulkan|lengkapi|sertakan|gunakan|siapkan|rangkum|uraikan|desain|kembangkan|uji|evaluasi|submit|write|create|explain|analyze|design|implement".split("|");
+function analyze(text){
+ const clean=text.replace(/\s+/g," ").trim();
+ const sents=(text.replace(/\r/g,"").split(/\n+|(?<=[.!?])\s+/)).map(s=>s.replace(/^[\s\-•*\d.)]+/,"").trim()).filter(s=>s.length>12);
+ const dm=clean.match(/(?:deadline|dikumpulkan|batas(?: waktu| pengumpulan)?|paling lambat|tenggat)[^.;\n]{0,80}/i);
+ const tasks=[];
+ sents.forEach(s=>{const w=s.toLowerCase().split(/\s+/);
+  if(VERBS.includes(w[0])||VERBS.includes(w[1]||"")||/\b(harus|wajib|diminta|dikumpulkan)\b/i.test(s)){if(!tasks.includes(s)&&tasks.length<8)tasks.push(s.replace(/[.;]$/,""))}});
+ if(!tasks.length)sents.slice(0,4).forEach(s=>tasks.push(s.replace(/[.;]$/,"")));
+ const summary=sents.slice(0,3).join(" ");
+ const steps=["Baca seluruh instruksi sampai selesai dan tandai kata kunci","Kumpulkan bahan, referensi, dan peralatan yang dibutuhkan",
+  ...tasks.map(t=>"Kerjakan: "+t),"Periksa hasil terhadap instruksi dan daftar pekerjaan","Rapikan format, simpan, lalu kumpulkan"+(dm?" ("+dm[0].trim()+")":"")];
+ return{summary:summary||clean.slice(0,300),deadline:dm?dm[0].trim():"",tasks,steps};
+}
+
+$("go").onclick=()=>{
+ const t=$("txt").value.trim();
+ if(t.length<30){say("Instruksi terlalu pendek. Unggah file atau tempel teks tugas yang lengkap.",1);return}
+ const r=analyze(t);state={text:t,...r,done:r.steps.map(()=>false)};store.set(state);render();say("");
+ $("result").scrollIntoView({behavior:"smooth"});
+};
+$("sample").onclick=()=>{$("txt").value="Buatlah sebuah makalah tentang dampak media sosial terhadap prestasi belajar mahasiswa. Makalah minimal 8 halaman dengan format APA. Jelaskan minimal tiga faktor yang memengaruhi dampak tersebut dan sertakan data pendukung dari jurnal. Susun kesimpulan dan saran di bagian akhir. Presentasikan hasilnya secara singkat di kelas. Tugas dikumpulkan paling lambat hari Jumat pukul 23.59 melalui LMS.";say("Contoh dimuat. Klik Analisis tugas.")};
+
+function render(){
+ $("result").style.display="block";
+ $("sum").textContent=state.summary;
+ $("dl").textContent=state.deadline?"Tenggat terdeteksi: "+state.deadline:"";
+ $("tasks").innerHTML="";state.tasks.forEach(t=>{const li=document.createElement("li");li.textContent=t;$("tasks").appendChild(li)});
+ $("steps").innerHTML="";
+ state.steps.forEach((s,i)=>{const li=document.createElement("li"),cb=document.createElement("input"),lb=document.createElement("label");
+  cb.type="checkbox";cb.id="s"+i;cb.checked=!!state.done[i];lb.htmlFor=cb.id;lb.textContent=s;li.className=cb.checked?"done":"";
+  cb.onchange=()=>{state.done[i]=cb.checked;li.className=cb.checked?"done":"";store.set(state);prog()};
+  li.append(cb,lb);$("steps").appendChild(li)});
+ prog();
+}
+function prog(){const n=state.done.filter(Boolean).length,t=state.done.length,p=t?Math.round(n/t*100):0;
+ $("fill").style.width=p+"%";$("pct").textContent=n+" dari "+t+" langkah selesai ("+p+"%)"+(p===100?" – semua selesai!":"")}
+$("reset").onclick=()=>{state.done=state.steps.map(()=>false);store.set(state);render()};
+
+/* Muat progres tersimpan */
+const saved=store.get();if(saved&&saved.steps&&saved.steps.length){state=saved;$("txt").value=state.text||"";render();say("Progres terakhirmu dimuat dari browser ini.")}
+</script>
+</body>
+</html>
