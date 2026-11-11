@@ -1,13 +1,10 @@
+
 /* ==========================================================================
-   Taskly - style.css
+   TASKLY - STYLE CSS
    ========================================================================== */
 
+/* VARIABEL WARNA */
 
-/* --------------------------------------------------------------------------
-   1. Variabel warna & tema
-   -------------------------------------------------------------------------- */
-
-/* Tema terang (default) */
 :root {
   --bg: #F3F6FB;
   --card: #FFFFFF;
@@ -23,7 +20,8 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Tema gelap otomatis (ikut pengaturan perangkat) */
+/* TEMA GELAP OTOMATIS */
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0F172A;
@@ -37,7 +35,8 @@
   }
 }
 
-/* Tema gelap manual (tombol "Ganti tema") */
+/* TEMA GELAP MANUAL */
+
 :root[data-theme="dark"] {
   --bg: #0F172A;
   --card: #1E293B;
@@ -49,10 +48,7 @@
   --warn: #FBBF24;
 }
 
-
-/* --------------------------------------------------------------------------
-   2. Reset & dasar
-   -------------------------------------------------------------------------- */
+/* RESET */
 
 html {
   scroll-padding-top: env(safe-area-inset-top, 0px);
@@ -68,13 +64,10 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 16px/1.6 "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 16px/1.6 "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
-
-/* --------------------------------------------------------------------------
-   3. Layout
-   -------------------------------------------------------------------------- */
+/* LAYOUT */
 
 main {
   max-width: 860px;
@@ -84,9 +77,18 @@ main {
 
 header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 36px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -.02em;
 }
 
 .row {
@@ -101,25 +103,7 @@ header {
   display: none;
 }
 
-
-/* --------------------------------------------------------------------------
-   4. Tipografi
-   -------------------------------------------------------------------------- */
-
-.logo {
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: -.02em;
-}
-
-.logo i {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--acc);
-  margin-right: 8px;
-}
+/* TIPOGRAFI */
 
 h1 {
   font-size: clamp(30px, 6vw, 46px);
@@ -132,7 +116,6 @@ h1 {
 h2 {
   font-size: 19px;
   margin: 0 0 12px;
-  letter-spacing: -.01em;
 }
 
 .lead {
@@ -156,10 +139,7 @@ h2 {
   color: var(--warn);
 }
 
-
-/* --------------------------------------------------------------------------
-   5. Kartu
-   -------------------------------------------------------------------------- */
+/* CARD */
 
 .card {
   background: var(--card);
@@ -169,10 +149,7 @@ h2 {
   margin-bottom: 20px;
 }
 
-
-/* --------------------------------------------------------------------------
-   6. Area upload & input
-   -------------------------------------------------------------------------- */
+/* AREA UPLOAD */
 
 .drop {
   border: 2px dashed var(--line);
@@ -181,6 +158,7 @@ h2 {
   text-align: center;
   cursor: pointer;
   transition: .15s;
+  user-select: none;
 }
 
 .drop:hover,
@@ -201,6 +179,16 @@ h2 {
   font-size: 14px;
 }
 
+.drop.on {
+  transform: scale(1.005);
+}
+
+#dname {
+  overflow-wrap: anywhere;
+}
+
+/* TEXTAREA */
+
 textarea {
   width: 100%;
   min-height: 120px;
@@ -214,10 +202,7 @@ textarea {
   resize: vertical;
 }
 
-
-/* --------------------------------------------------------------------------
-   7. Tombol
-   -------------------------------------------------------------------------- */
+/* TOMBOL */
 
 button {
   font: inherit;
@@ -228,23 +213,26 @@ button {
   cursor: pointer;
   background: var(--acc);
   color: #FFFFFF;
+  min-height: 44px;
 }
 
-/* Tombol sekunder (outline) */
 button.g {
   background: transparent;
   color: var(--ink);
   border: 1px solid var(--line);
 }
 
-/* Fokus keyboard */
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
 button:focus-visible,
 input:focus-visible {
   outline: 3px solid var(--acc);
   outline-offset: 2px;
 }
 
-/* Teks tombol utama di tema gelap */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) button:not(.g) {
     color: #0F172A;
@@ -255,10 +243,7 @@ input:focus-visible {
   color: #0F172A;
 }
 
-
-/* --------------------------------------------------------------------------
-   8. Daftar pekerjaan
-   -------------------------------------------------------------------------- */
+/* DAFTAR PEKERJAAN */
 
 ul.t {
   margin: 0;
@@ -269,10 +254,7 @@ ul.t li {
   margin: 6px 0;
 }
 
-
-/* --------------------------------------------------------------------------
-   9. Progress bar
-   -------------------------------------------------------------------------- */
+/* PROGRESS BAR */
 
 .bar {
   height: 10px;
@@ -289,10 +271,7 @@ ul.t li {
   transition: width .3s;
 }
 
-
-/* --------------------------------------------------------------------------
-   10. Panduan pengerjaan (timeline langkah)
-   -------------------------------------------------------------------------- */
+/* PANDUAN PENGERJAAN */
 
 ol.steps {
   list-style: none;
@@ -301,7 +280,6 @@ ol.steps {
   position: relative;
 }
 
-/* Garis vertikal penghubung */
 ol.steps::before {
   content: "";
   position: absolute;
@@ -317,7 +295,8 @@ ol.steps li {
   padding: 8px 0 8px 44px;
 }
 
-/* Checkbox bulat */
+/* CHECKBOX */
+
 ol.steps input {
   position: absolute;
   left: 0;
@@ -347,19 +326,38 @@ ol.steps input:checked::after {
 }
 
 ol.steps label {
+  display: block;
+  min-height: 44px;
+  padding-top: 6px;
   cursor: pointer;
 }
 
-/* Langkah yang sudah selesai */
 ol.steps li.done label {
   color: var(--mute);
   text-decoration: line-through;
 }
 
+/* RESPONSIVE */
 
-/* --------------------------------------------------------------------------
-   11. Aksesibilitas
-   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  main {
+    padding: 20px 15px 40px;
+  }
+
+  .card {
+    padding: 17px;
+  }
+
+  header {
+    margin-bottom: 28px;
+  }
+
+  .drop {
+    padding: 25px 12px;
+  }
+}
+
+/* AKSESIBILITAS */
 
 @media (prefers-reduced-motion: reduce) {
   * {

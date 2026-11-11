@@ -1,52 +1,185 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Taskly – Asisten Tugas Mahasiswa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <title>Taskly – Asisten AI untuk Tugas Mahasiswa</title>
+
+  <meta name="description" content="Taskly menganalisis instruksi tugas dan menyusun ringkasan, daftar pekerjaan, serta panduan pengerjaan bertahap.">
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
+
 <main>
-<header><button class="g" id="theme" aria-label="Ganti tema">Ganti tema</button></header>
 
-<section>
-<h1>Bingung mulai tugas dari mana?</h1>
-<p class="lead">Unggah instruksi tugasmu. Taskly meringkasnya, menyusun daftar pekerjaan, dan memberi langkah pengerjaan yang bisa kamu centang satu per satu.</p>
-<div class="card">
-<h2>Unggah instruksi tugas</h2>
-<div class="drop" id="drop" tabindex="0" role="button" aria-label="Pilih file instruksi tugas">
-<b id="dname">Tarik file ke sini atau klik untuk memilih</b><span>PDF, gambar, atau teks (.txt)</span>
-<input type="file" id="file" accept=".pdf,.txt,image/*" hidden>
-</div>
-<textarea id="txt" placeholder="Atau tempel teks instruksi tugas di sini. Untuk file gambar, tempel teksnya di sini."></textarea>
-<div class="row"><button id="go">Analisis tugas</button><button class="g" id="sample">Pakai contoh</button></div>
-<p class="msg" id="msg" role="status"></p>
-</div>
-</section>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 48 48" width="32" height="32" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#0D9488"/>
+        <path d="M13 25l8 8 14-17" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Taskly
+    </div>
 
-<section id="result">
-<div class="card"><h2>Ringkasan</h2><p id="sum" style="margin:0"></p><p class="note" id="dl" style="margin:10px 0 0"></p></div>
-<div class="card"><h2>Daftar pekerjaan</h2><ul class="t" id="tasks"></ul></div>
-<div class="card"><h2>Panduan pengerjaan</h2>
-<div class="bar" aria-hidden="true"><div id="fill"></div></div><div class="note" id="pct"></div>
-<ol class="steps" id="steps"></ol>
-<div class="row"><button class="g" id="reset">Mulai ulang progres</button></div>
-<p class="note">Progres tersimpan di browser ini (localStorage), tanpa akun. Periksa hasil analisis sebelum dijadikan acuan akhir.</p></div>
-</section>
+    <button class="g" id="theme" type="button">
+      Ganti tema
+    </button>
+  </header>
+
+
+  <!-- BAGIAN UPLOAD -->
+  <section id="upload">
+
+    <h1>Tugas yang kompleks. Langkah yang lebih jelas.</h1>
+
+    <p class="lead">
+      Unggah atau tempel instruksi tugas. Taskly menyusun ringkasan,
+      daftar pekerjaan, dan panduan pengerjaan yang bisa kamu centang
+      satu per satu.
+    </p>
+
+    <div class="card">
+
+      <!-- AREA DRAG AND DROP -->
+      <div
+        class="drop"
+        id="drop"
+        role="button"
+        tabindex="0"
+        aria-label="Pilih file instruksi tugas"
+      >
+        <b id="dropTitle">
+          Tarik file ke sini atau klik untuk memilih
+        </b>
+
+        <span id="dropSubtitle">
+          PDF atau TXT, maksimal 10 MB
+        </span>
+      </div>
+
+      <!-- INPUT FILE -->
+      <input
+        type="file"
+        id="file"
+        accept=".pdf,.txt,application/pdf,text/plain"
+        hidden
+      >
+
+      <!-- NAMA FILE -->
+      <p class="note" id="dname"></p>
+
+      <!-- INPUT TEKS -->
+      <textarea
+        id="txt"
+        placeholder="Atau tempel teks instruksi tugas di sini…"
+        aria-label="Teks instruksi tugas"
+      ></textarea>
+
+      <!-- TOMBOL -->
+      <div class="row">
+        <button type="button" id="go">
+          Analisis tugas
+        </button>
+
+        <button type="button" class="g" id="sample">
+          Pakai contoh
+        </button>
+      </div>
+
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+    </div>
+
+  </section>
+
+
+  <!-- BAGIAN HASIL ANALISIS -->
+  <section id="result">
+
+    <!-- RINGKASAN -->
+    <div class="card">
+
+      <h2>Ringkasan</h2>
+
+      <p id="sum"></p>
+
+      <p class="note" id="dl"></p>
+
+    </div>
+
+
+    <!-- DAFTAR PEKERJAAN -->
+    <div class="card">
+
+      <h2>Daftar Pekerjaan</h2>
+
+      <ul class="t" id="tasks"></ul>
+
+    </div>
+
+
+    <!-- PANDUAN PENGERJAAN -->
+    <div class="card">
+
+      <h2>Panduan Pengerjaan</h2>
+
+      <div class="bar">
+        <div id="fill"></div>
+      </div>
+
+      <p class="note" id="pct"></p>
+
+      <ol class="steps" id="steps"></ol>
+
+      <div class="row">
+
+        <button type="button" class="g" id="reset">
+          Reset checklist
+        </button>
+
+        <button type="button" class="g" id="newtask">
+          Tugas baru
+        </button>
+
+      </div>
+
+    </div>
+
+    <p class="note">
+      Periksa kembali hasil analisis sebelum dijadikan acuan akhir.
+      Progres disimpan di browser ini (localStorage), tanpa akun dan tanpa database.
+    </p>
+
+  </section>
+
 </main>
 
-<!-- Library PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 
-<!-- Script aplikasi (urutan penting) -->
+<!-- LIBRARY PDF.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+</script>
+
+
+<!-- JAVASCRIPT TASKLY -->
 <script src="js/state.js"></script>
+<script src="js/analyzer.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/upload.js"></script>
-<script src="js/analyzer.js"></script>
 <script src="js/ui.js"></script>
+
 </body>
 </html>
