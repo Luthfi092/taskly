@@ -1,4 +1,4 @@
-/* Analisis lokal. Titik sambung untuk NLP Hugging Face: ganti isi analyze() dengan panggilan model. */
+  /* Analisis lokal. Titik sambung untuk NLP Hugging Face: ganti isi analyze() dengan panggilan model. */
 const VERBS = "buat|buatlah|jelaskan|analisis|analisislah|susun|susunlah|rancang|rancanglah|implementasikan|tulis|tuliskan|hitung|hitunglah|kerjakan|presentasikan|kumpulkan|unggah|upload|bandingkan|identifikasi|cari|carilah|diskusikan|simpulkan|lengkapi|sertakan|gunakan|siapkan|rangkum|uraikan|desain|kembangkan|uji|evaluasi|submit|write|create|explain|analyze|design|implement".split("|");
 
 function analyze(text) {
