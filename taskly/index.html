@@ -34,7 +34,6 @@
     </button>
   </header>
 
-
   <!-- BAGIAN UPLOAD -->
   <section id="upload">
 
@@ -61,7 +60,7 @@
         </b>
 
         <span id="dropSubtitle">
-          PDF atau TXT, maksimal 10 MB
+          PDF, TXT, atau Gambar (JPG, PNG, WEBP), maksimal 10 MB
         </span>
       </div>
 
@@ -69,7 +68,7 @@
       <input
         type="file"
         id="file"
-        accept=".pdf,.txt,application/pdf,text/plain"
+        accept=".pdf,.txt,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,image/png,image/jpeg,image/webp"
         hidden
       >
 
@@ -100,7 +99,6 @@
 
   </section>
 
-
   <!-- BAGIAN HASIL ANALISIS -->
   <section id="result">
 
@@ -115,7 +113,6 @@
 
     </div>
 
-
     <!-- DAFTAR PEKERJAAN -->
     <div class="card">
 
@@ -124,7 +121,6 @@
       <ul class="t" id="tasks"></ul>
 
     </div>
-
 
     <!-- PANDUAN PENGERJAAN -->
     <div class="card">
@@ -162,7 +158,6 @@
 
 </main>
 
-
 <!-- LIBRARY PDF.JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
@@ -172,7 +167,6 @@
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
 </script>
-
 
 <!-- JAVASCRIPT TASKLY -->
 <script src="js/state.js"></script>

@@ -12,7 +12,11 @@ $("go").onclick = async () => {
 
   const t = $("txt").value.trim();
 
-  if (t.length < 30) {
+  // Mengambil file yang dipilih dari upload.js
+  const selectedFile = uploadedTaskFile;
+
+  // Teks boleh kosong jika pengguna mengunggah file
+  if (t.length < 30 && !selectedFile) {
 
     say(
       "Instruksi terlalu pendek. Unggah file atau tempel teks tugas yang lengkap.",
@@ -25,11 +29,12 @@ $("go").onclick = async () => {
 
   $("go").disabled = true;
 
-  say("Menganalisis...");
+  say("Menganalisis tugas menggunakan Groq...");
 
   try {
 
-    const r = await analyze(t);
+    // Mengirim teks dan file ke backend
+    const r = await analyze(t, selectedFile);
 
     state = {
       text: t,
@@ -49,10 +54,10 @@ $("go").onclick = async () => {
 
   } catch (e) {
 
-    console.error(e);
+    console.error("Analisis error:", e);
 
     say(
-      "Analisis gagal. Coba lagi beberapa saat.",
+      e.message || "Analisis gagal. Coba lagi beberapa saat.",
       true
     );
 
@@ -78,6 +83,10 @@ $("sample").onclick = () => {
     "Susun kesimpulan dan saran di bagian akhir. " +
     "Presentasikan hasilnya secara singkat di kelas. " +
     "Tugas dikumpulkan paling lambat hari Jumat pukul 23.59 melalui LMS.";
+
+  // Hapus file sebelumnya
+  uploadedTaskFile = null;
+  file.value = "";
 
   $("dname").textContent = "";
 
@@ -266,6 +275,9 @@ $("newtask").onclick = () => {
   $("result").style.display = "none";
 
   file.value = "";
+
+  // Hapus file yang sebelumnya diunggah
+  uploadedTaskFile = null;
 
   say("");
 

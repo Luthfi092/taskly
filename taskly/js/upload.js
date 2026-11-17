@@ -1,7 +1,7 @@
 
 /* ==========================================================================
    TASKLY - UPLOAD FILE
-   Mendukung PDF, TXT, klik, dan drag & drop
+   Mendukung PDF, TXT, JPG, PNG, WEBP, klik, dan drag & drop
    ========================================================================== */
 
 const drop = $("drop");
@@ -9,6 +9,9 @@ const file = $("file");
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 const MAX_PAGES = 30;
+
+// Menyimpan file agar bisa dikirim ke backend Groq
+let uploadedTaskFile = null;
 
 
 /* --------------------------------------------------------------------------
@@ -25,15 +28,10 @@ drop.onclick = () => {
    -------------------------------------------------------------------------- */
 
 drop.onkeydown = e => {
-
   if (e.key === "Enter" || e.key === " ") {
-
     e.preventDefault();
-
     file.click();
-
   }
-
 };
 
 
@@ -41,48 +39,28 @@ drop.onkeydown = e => {
    3. DRAG AND DROP
    -------------------------------------------------------------------------- */
 
-// Ketika file ditarik ke area upload
-
 ["dragover", "dragenter"].forEach(ev => {
-
   drop.addEventListener(ev, e => {
-
     e.preventDefault();
-
     drop.classList.add("on");
-
   });
-
 });
 
-
-// Ketika file keluar atau dilepaskan
 
 ["dragleave", "drop"].forEach(ev => {
-
   drop.addEventListener(ev, e => {
-
     e.preventDefault();
-
     drop.classList.remove("on");
-
   });
-
 });
 
 
-// Menerima file yang dilepaskan
-
-drop.addEventListener("drop", e => {
-
+drop.addEventListener("drop", async e => {
   const selected = e.dataTransfer.files[0];
 
   if (selected) {
-
-    handle(selected);
-
+    await handle(selected);
   }
-
 });
 
 
@@ -91,19 +69,14 @@ drop.addEventListener("drop", e => {
    -------------------------------------------------------------------------- */
 
 file.onchange = async () => {
-
   const selected = file.files[0];
 
   if (selected) {
-
     await handle(selected);
-
   }
 
   // Reset supaya file yang sama dapat dipilih kembali
-
   file.value = "";
-
 };
 
 
@@ -113,45 +86,35 @@ file.onchange = async () => {
 
 async function handle(f) {
 
-  // Menampilkan nama file
+  uploadedTaskFile = null;
 
   $("dname").textContent = f.name;
 
-
   // VALIDASI UKURAN
-
   if (f.size > MAX_SIZE) {
-
     say(
       "File lebih dari 10 MB. Pilih file yang lebih kecil.",
       true
     );
-
     return;
-
   }
 
-
   // VALIDASI FORMAT
-
   const name = f.name.toLowerCase();
 
   const isPDF = name.endsWith(".pdf");
-
   const isTXT = name.endsWith(".txt");
 
+  const isImage =
+    /\.(png|jpg|jpeg|webp)$/i.test(name);
 
-  if (!isPDF && !isTXT) {
-
+  if (!isPDF && !isTXT && !isImage) {
     say(
-      "Format tidak didukung. Gunakan file PDF atau TXT.",
+      "Format tidak didukung. Gunakan PDF, TXT, JPG, PNG, atau WEBP.",
       true
     );
-
     return;
-
   }
-
 
   try {
 
@@ -166,33 +129,21 @@ async function handle(f) {
 
     if (isPDF) {
 
-      // Memeriksa PDF.js
+      // Simpan file PDF untuk dikirim ke backend Groq
+      uploadedTaskFile = f;
 
       if (!window.pdfjsLib) {
-
         throw new Error("PDF.js tidak berhasil dimuat.");
-
       }
 
-
-      // Membuka dokumen PDF
-
       const pdfDoc = await pdfjsLib.getDocument({
-
         data: await f.arrayBuffer()
-
       }).promise;
-
-
-      // Membatasi pembacaan maksimal 30 halaman
 
       const totalPages = Math.min(
         pdfDoc.numPages,
         MAX_PAGES
       );
-
-
-      // Membaca setiap halaman
 
       for (let i = 1; i <= totalPages; i++) {
 
@@ -205,16 +156,15 @@ async function handle(f) {
           .join(" ");
 
         output += pageText + "\n";
-
       }
 
-
       if (pdfDoc.numPages > MAX_PAGES) {
+        say("Hanya 30 halaman pertama yang dibaca.");
+      }
 
-        say(
-          "Hanya 30 halaman pertama yang dibaca."
-        );
-
+      // Memasukkan teks PDF jika berhasil diekstrak
+      if (output.trim().length >= 20) {
+        $("txt").value = output.trim();
       }
 
     }
@@ -228,41 +178,56 @@ async function handle(f) {
 
       output = await f.text();
 
+      if (output.trim().length < 20) {
+        throw new Error(
+          "Teks tidak ditemukan atau terlalu pendek."
+        );
+      }
+
+      $("txt").value = output.trim();
     }
 
 
     /* ----------------------------------------------------------------------
-       8. VALIDASI HASIL PEMBACAAN
+       8. MENERIMA GAMBAR
        ---------------------------------------------------------------------- */
 
-    if (output.trim().length < 20) {
+    else if (isImage) {
 
-      throw new Error(
-        "Teks tidak ditemukan atau terlalu pendek."
-      );
+      // Simpan gambar asli untuk dikirim ke Groq Vision
+      uploadedTaskFile = f;
 
     }
 
 
     /* ----------------------------------------------------------------------
-       9. MEMASUKKAN TEKS KE TEXTAREA
+       9. MENAMPILKAN STATUS UPLOAD
        ---------------------------------------------------------------------- */
-
-    $("txt").value = output.trim();
 
     $("dname").textContent = "✓ " + f.name;
 
-    say(
-      "File berhasil dibaca! Klik Analisis tugas untuk melanjutkan."
-    );
-
+    if (isImage) {
+      say(
+        "Gambar berhasil diunggah! Groq akan membaca isi gambar saat dianalisis."
+      );
+    } else if (isPDF && output.trim().length < 20) {
+      say(
+        "PDF berhasil diunggah. Teks akan dianalisis langsung oleh Groq."
+      );
+    } else {
+      say(
+        "File berhasil dibaca! Klik Analisis tugas untuk melanjutkan."
+      );
+    }
 
   } catch (error) {
 
     console.error("Upload error:", error);
 
+    uploadedTaskFile = null;
+
     say(
-      "File gagal dibaca. Pastikan PDF berisi teks, bukan hasil scan gambar.",
+      error.message || "File gagal dibaca. Periksa kembali file kamu.",
       true
     );
 

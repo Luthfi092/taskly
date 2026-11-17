@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+taskly/node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Backend environment
+backend/.env
