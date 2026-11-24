@@ -1,11 +1,10 @@
-
 /* ==========================================================================
    TASKLY - RENDER HASIL, PROGRES, DAN TOMBOL
    ========================================================================== */
 
 
 /* --------------------------------------------------------------------------
-   1. ANALISIS TUGAS
+1. ANALISIS TUGAS
    -------------------------------------------------------------------------- */
 
 $("go").onclick = async () => {
@@ -33,7 +32,7 @@ $("go").onclick = async () => {
 
   try {
 
-    // Mengirim teks dan file ke backend
+    // Mengirim teks instruksi dan file ke backend
     const r = await analyze(t, selectedFile);
 
     state = {
@@ -71,10 +70,12 @@ $("go").onclick = async () => {
 
 
 /* --------------------------------------------------------------------------
-   2. TOMBOL CONTOH
+2. TOMBOL CONTOH
    -------------------------------------------------------------------------- */
 
 $("sample").onclick = () => {
+
+  clearUpload(true);
 
   $("txt").value =
     "Buatlah sebuah makalah tentang dampak media sosial terhadap prestasi belajar mahasiswa. " +
@@ -84,19 +85,13 @@ $("sample").onclick = () => {
     "Presentasikan hasilnya secara singkat di kelas. " +
     "Tugas dikumpulkan paling lambat hari Jumat pukul 23.59 melalui LMS.";
 
-  // Hapus file sebelumnya
-  uploadedTaskFile = null;
-  file.value = "";
-
-  $("dname").textContent = "";
-
   say("Contoh dimuat. Klik Analisis tugas.");
 
 };
 
 
 /* --------------------------------------------------------------------------
-   3. RENDER HASIL ANALISIS
+3. RENDER HASIL ANALISIS
    -------------------------------------------------------------------------- */
 
 function render() {
@@ -187,7 +182,7 @@ function render() {
 
 
 /* --------------------------------------------------------------------------
-   4. PROGRESS BAR
+4. PROGRESS BAR
    -------------------------------------------------------------------------- */
 
 function prog() {
@@ -213,7 +208,7 @@ function prog() {
 
 
 /* --------------------------------------------------------------------------
-   5. RESET CHECKLIST
+5. RESET CHECKLIST
    -------------------------------------------------------------------------- */
 
 $("reset").onclick = () => {
@@ -228,58 +223,23 @@ $("reset").onclick = () => {
 
 
 /* --------------------------------------------------------------------------
-   6. MUAT DATA TERSIMPAN
+6. INISIALISASI HALAMAN KOSONG SAAT PERTAMA DIBUKA
    -------------------------------------------------------------------------- */
 
-const saved = store.get();
-
-if (
-  saved &&
-  saved.steps &&
-  Array.isArray(saved.steps) &&
-  saved.steps.length
-) {
-
-  state = saved;
-
-  $("txt").value = state.text || "";
-
-  render();
-
-  say("Progres terakhirmu dimuat dari browser ini.");
-
-}
+store.clear();
+$("txt").value = "";
+$("result").style.display = "none";
 
 
 /* --------------------------------------------------------------------------
-   7. TUGAS BARU
+7. TUGAS BARU
    -------------------------------------------------------------------------- */
 
 $("newtask").onclick = () => {
 
-  store.clear();
-
-  state = {
-    text: "",
-    summary: "",
-    deadline: "",
-    tasks: [],
-    steps: [],
-    done: []
-  };
+  clearUpload(true);
 
   $("txt").value = "";
-
-  $("dname").textContent = "";
-
-  $("result").style.display = "none";
-
-  file.value = "";
-
-  // Hapus file yang sebelumnya diunggah
-  uploadedTaskFile = null;
-
-  say("");
 
   window.scrollTo({
     top: 0,
