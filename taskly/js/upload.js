@@ -8,9 +8,11 @@ const file = $("file");
 const preview = $("preview");
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_PAGES = 30;
 
-// Menyimpan file agar bisa dikirim ke backend Groq
+// Menyimpan file dan teks ekstrak agar bisa dikirim ke backend
 let uploadedTaskFile = null;
+let extractedFileText = "";
 
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + " B";
@@ -68,6 +70,7 @@ function showPreview(f, ext) {
 
 function clearUpload(resetResultSection = false) {
   uploadedTaskFile = null;
+  extractedFileText = "";
   file.value = "";
   preview.innerHTML = "";
   preview.hidden = true;
@@ -162,6 +165,7 @@ file.onchange = async () => {
 async function handle(f) {
 
   uploadedTaskFile = null;
+  extractedFileText = "";
   preview.innerHTML = "";
   preview.hidden = true;
 
@@ -192,34 +196,61 @@ async function handle(f) {
 
   try {
 
-    // Validasi khusus file TXT agar tidak kosong
-    if (isTXT) {
-      const textContent = await f.text();
-      if (textContent.trim().length < 20) {
-        throw new Error("Isi file TXT terlalu pendek atau kosong.");
+    say("Sedang membaca file...");
+
+    let output = "";
+    let pageLimitNotice = false;
+
+    if (isPDF) {
+      if (!window.pdfjsLib) {
+        throw new Error("PDF.js tidak berhasil dimuat.");
       }
+
+      const pdfDoc = await pdfjsLib.getDocument({
+        data: await f.arrayBuffer()
+      }).promise;
+
+      const totalPages = Math.min(pdfDoc.numPages, MAX_PAGES);
+      pageLimitNotice = pdfDoc.numPages > MAX_PAGES;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(" ");
+        output += pageText + "\n";
+      }
+
+      if (output.trim().length > 0) {
+        extractedFileText = output.trim();
+      }
+    } else if (isTXT) {
+      output = await f.text();
+      if (output.trim().length === 0) {
+        throw new Error("Isi file TXT kosong.");
+      }
+      extractedFileText = output.trim();
     }
 
-    // Simpan file asli (PDF, TXT, atau Gambar) untuk dikirim ke backend Groq
     uploadedTaskFile = f;
-
-    // Tampilkan kartu preview file
     showPreview(f, ext);
 
-    say(
-      "File siap dianalisis! Tambahkan instruksi khusus jika perlu, lalu klik Analisis tugas."
-    );
+    if (pageLimitNotice) {
+      say("Hanya 30 halaman pertama yang dibaca. Tulis instruksi jika perlu, lalu klik Analisis tugas.");
+    } else {
+      say("File siap! Boleh langsung klik Analisis tugas atau tulis instruksi tambahan di kolom teks.");
+    }
 
   } catch (error) {
 
     console.error("Upload error:", error);
 
     uploadedTaskFile = null;
+    extractedFileText = "";
     preview.innerHTML = "";
     preview.hidden = true;
 
     say(
-      error.message || "File gagal diproses. Periksa kembali file kamu.",
+      error.message || "File gagal dibaca. Periksa kembali file kamu.",
       true
     );
 
