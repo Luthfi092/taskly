@@ -1,4 +1,3 @@
-
 /* ==========================================================================
    TASKLY - UPLOAD FILE
    Mendukung PDF, TXT, JPG, PNG, WEBP, klik, dan drag & drop
@@ -6,16 +5,92 @@
 
 const drop = $("drop");
 const file = $("file");
+const preview = $("preview");
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-const MAX_PAGES = 30;
 
 // Menyimpan file agar bisa dikirim ke backend Groq
 let uploadedTaskFile = null;
 
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function showPreview(f, ext) {
+  preview.innerHTML = "";
+  preview.hidden = false;
+
+  const card = document.createElement("div");
+  card.className = "fcard" + (f.type.startsWith("image/") ? " img" : "");
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "fdel";
+  del.setAttribute("aria-label", "Batalkan file " + f.name);
+  del.title = "Batalkan file";
+  del.textContent = "×";
+  del.onclick = e => {
+    e.stopPropagation();
+    clearUpload(true);
+  };
+
+  if (f.type.startsWith("image/")) {
+    const img = document.createElement("img");
+    const url = URL.createObjectURL(f);
+    img.src = url;
+    img.alt = f.name;
+    img.onload = () => URL.revokeObjectURL(url);
+    card.append(img, del);
+  } else {
+    const meta = document.createElement("div");
+
+    const badge = document.createElement("span");
+    badge.className = "fbadge";
+    badge.textContent = ext.toUpperCase();
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "fname";
+    nameEl.title = f.name;
+    nameEl.textContent = f.name;
+
+    const sizeEl = document.createElement("div");
+    sizeEl.className = "fsize";
+    sizeEl.textContent = formatSize(f.size);
+
+    meta.append(nameEl, sizeEl);
+    card.append(badge, meta, del);
+  }
+
+  preview.appendChild(card);
+}
+
+function clearUpload(resetResultSection = false) {
+  uploadedTaskFile = null;
+  file.value = "";
+  preview.innerHTML = "";
+  preview.hidden = true;
+
+  if (resetResultSection) {
+    store.clear();
+    state = {
+      text: "",
+      summary: "",
+      deadline: "",
+      tasks: [],
+      steps: [],
+      done: []
+    };
+    $("result").style.display = "none";
+  }
+
+  say("");
+}
+
 
 /* --------------------------------------------------------------------------
-   1. KLIK AREA UPLOAD
+1. KLIK AREA UPLOAD
    -------------------------------------------------------------------------- */
 
 drop.onclick = () => {
@@ -24,7 +99,7 @@ drop.onclick = () => {
 
 
 /* --------------------------------------------------------------------------
-   2. AKSES KEYBOARD
+2. AKSES KEYBOARD
    -------------------------------------------------------------------------- */
 
 drop.onkeydown = e => {
@@ -36,7 +111,7 @@ drop.onkeydown = e => {
 
 
 /* --------------------------------------------------------------------------
-   3. DRAG AND DROP
+3. DRAG AND DROP
    -------------------------------------------------------------------------- */
 
 ["dragover", "dragenter"].forEach(ev => {
@@ -65,7 +140,7 @@ drop.addEventListener("drop", async e => {
 
 
 /* --------------------------------------------------------------------------
-   4. PILIH FILE SECARA MANUAL
+4. PILIH FILE SECARA MANUAL
    -------------------------------------------------------------------------- */
 
 file.onchange = async () => {
@@ -81,14 +156,14 @@ file.onchange = async () => {
 
 
 /* --------------------------------------------------------------------------
-   5. FUNGSI UTAMA MEMBACA FILE
+5. FUNGSI UTAMA MEMBACA FILE
    -------------------------------------------------------------------------- */
 
 async function handle(f) {
 
   uploadedTaskFile = null;
-
-  $("dname").textContent = f.name;
+  preview.innerHTML = "";
+  preview.hidden = true;
 
   // VALIDASI UKURAN
   if (f.size > MAX_SIZE) {
@@ -101,12 +176,11 @@ async function handle(f) {
 
   // VALIDASI FORMAT
   const name = f.name.toLowerCase();
+  const ext = name.includes(".") ? name.split(".").pop() : "file";
 
   const isPDF = name.endsWith(".pdf");
   const isTXT = name.endsWith(".txt");
-
-  const isImage =
-    /\.(png|jpg|jpeg|webp)$/i.test(name);
+  const isImage = /\.(png|jpg|jpeg|webp)$/i.test(name);
 
   if (!isPDF && !isTXT && !isImage) {
     say(
@@ -118,116 +192,34 @@ async function handle(f) {
 
   try {
 
-    say("Sedang membaca file...");
-
-    let output = "";
-
-
-    /* ----------------------------------------------------------------------
-       6. MEMBACA PDF
-       ---------------------------------------------------------------------- */
-
-    if (isPDF) {
-
-      // Simpan file PDF untuk dikirim ke backend Groq
-      uploadedTaskFile = f;
-
-      if (!window.pdfjsLib) {
-        throw new Error("PDF.js tidak berhasil dimuat.");
+    // Validasi khusus file TXT agar tidak kosong
+    if (isTXT) {
+      const textContent = await f.text();
+      if (textContent.trim().length < 20) {
+        throw new Error("Isi file TXT terlalu pendek atau kosong.");
       }
-
-      const pdfDoc = await pdfjsLib.getDocument({
-        data: await f.arrayBuffer()
-      }).promise;
-
-      const totalPages = Math.min(
-        pdfDoc.numPages,
-        MAX_PAGES
-      );
-
-      for (let i = 1; i <= totalPages; i++) {
-
-        const page = await pdfDoc.getPage(i);
-
-        const content = await page.getTextContent();
-
-        const pageText = content.items
-          .map(item => item.str)
-          .join(" ");
-
-        output += pageText + "\n";
-      }
-
-      if (pdfDoc.numPages > MAX_PAGES) {
-        say("Hanya 30 halaman pertama yang dibaca.");
-      }
-
-      // Memasukkan teks PDF jika berhasil diekstrak
-      if (output.trim().length >= 20) {
-        $("txt").value = output.trim();
-      }
-
     }
 
+    // Simpan file asli (PDF, TXT, atau Gambar) untuk dikirim ke backend Groq
+    uploadedTaskFile = f;
 
-    /* ----------------------------------------------------------------------
-       7. MEMBACA TXT
-       ---------------------------------------------------------------------- */
+    // Tampilkan kartu preview file
+    showPreview(f, ext);
 
-    else if (isTXT) {
-
-      output = await f.text();
-
-      if (output.trim().length < 20) {
-        throw new Error(
-          "Teks tidak ditemukan atau terlalu pendek."
-        );
-      }
-
-      $("txt").value = output.trim();
-    }
-
-
-    /* ----------------------------------------------------------------------
-       8. MENERIMA GAMBAR
-       ---------------------------------------------------------------------- */
-
-    else if (isImage) {
-
-      // Simpan gambar asli untuk dikirim ke Groq Vision
-      uploadedTaskFile = f;
-
-    }
-
-
-    /* ----------------------------------------------------------------------
-       9. MENAMPILKAN STATUS UPLOAD
-       ---------------------------------------------------------------------- */
-
-    $("dname").textContent = "✓ " + f.name;
-
-    if (isImage) {
-      say(
-        "Gambar berhasil diunggah! Groq akan membaca isi gambar saat dianalisis."
-      );
-    } else if (isPDF && output.trim().length < 20) {
-      say(
-        "PDF berhasil diunggah. Teks akan dianalisis langsung oleh Groq."
-      );
-    } else {
-      say(
-        "File berhasil dibaca! Klik Analisis tugas untuk melanjutkan."
-      );
-    }
+    say(
+      "File siap dianalisis! Tambahkan instruksi khusus jika perlu, lalu klik Analisis tugas."
+    );
 
   } catch (error) {
 
     console.error("Upload error:", error);
 
     uploadedTaskFile = null;
+    preview.innerHTML = "";
+    preview.hidden = true;
 
     say(
-      error.message || "File gagal dibaca. Periksa kembali file kamu.",
+      error.message || "File gagal diproses. Periksa kembali file kamu.",
       true
     );
 
