@@ -110,42 +110,35 @@ Jika diberikan gambar:
 Jika diberikan teks dokumen:
 - Baca seluruh teks dan pahami instruksinya.
 
-Aturan:
-- Gunakan bahasa Indonesia sederhana.
-- Jangan hanya merangkum instruksi.
-- Buat langkah praktik yang konkret dan berurutan.
-- Jelaskan apa yang harus dilakukan mahasiswa pada setiap langkah.
-- Untuk tugas pemrograman, berikan tahapan pengerjaan dan kode jika relevan.
-- Jangan mengarang informasi yang tidak ada dalam instruksi.
-- Deadline harus diambil dari instruksi asli.
-- Jika deadline tidak ditemukan, isi dengan string kosong.
-- Jika informasi tidak tersedia, jangan membuat-buat informasi.
-- Buat hasil analisis secara lengkap, jelas, dan terstruktur.
-- Jumlah tasks menyesuaikan banyaknya pekerjaan dalam instruksi.
-- Jumlah rules menyesuaikan ketentuan yang ditemukan.
-- Jumlah steps menyesuaikan tingkat kesulitan dan kompleksitas tugas.
-- Jangan membatasi jumlah langkah secara tetap.
-- Jangan menghilangkan pekerjaan penting hanya demi membuat hasil lebih singkat.
-- Setiap langkah harus menjelaskan tindakan yang perlu dilakukan mahasiswa.
 
-Kembalikan hasil dalam format JSON berikut:
+Aturan:
+- Gunakan bahasa Indonesia yang sederhana dan mudah dipahami.
+- Analisis seluruh instruksi tugas, termasuk ketentuan dan deadline.
+- Jangan mengarang informasi yang tidak tersedia.
+- Buat langkah pengerjaan yang konkret, berurutan, dan mudah diikuti.
+- Untuk tugas pemrograman, jelaskan tahapan praktik dan berikan kode jika diperlukan.
+- Sesuaikan jumlah tasks, rules, dan steps dengan isi tugas.
+- Gabungkan pekerjaan yang serupa agar tidak berulang.
+- Jangan menghilangkan pekerjaan penting.
+- Buat setiap penjelasan ringkas tetapi tetap informatif.
+
+Kembalikan hasil dalam JSON berikut:
 
 {
   "summary": "Ringkasan tugas",
-  "deadline": "Informasi tenggat atau string kosong",
+  "deadline": "Deadline atau string kosong",
   "tasks": [
-    "Daftar pekerjaan yang harus dilakukan"
+    "Pekerjaan yang harus diselesaikan"
   ],
   "rules": [
     "Ketentuan tugas"
   ],
   "steps": [
-    "Langkah 1: penjelasan tindakan secara konkret",
-    "Langkah 2: penjelasan tindakan secara konkret"
+    "Langkah pengerjaan secara konkret dan berurutan"
   ]
 }
 
-Pastikan seluruh properti tersedia dan tipe datanya sesuai.
+Pastikan seluruh properti tersedia dan tipe datanya benar.
 Jangan gunakan Markdown code fence.
 `;
 
@@ -181,6 +174,7 @@ Jangan gunakan Markdown code fence.
         }
 
         // MENGIRIM PERMINTAAN KE GROQ
+
         const response = await groq.chat.completions.create({
             model: "qwen/qwen3.8-27b",
 
@@ -196,9 +190,19 @@ Jangan gunakan Markdown code fence.
             },
 
             reasoning_effort: "none",
+            reasoning_format: "hidden",
             temperature: 0.2,
-            max_completion_tokens: 1000
+            max_completion_tokens: 4096
         });
+
+
+        if (response.choices[0]?.finish_reason === "length") {
+            throw new Error(
+                "Hasil analisis terlalu panjang. Silakan coba dengan dokumen yang lebih singkat."
+            );
+        }
+
+
 
         // MENGAMBIL HASIL GROQ
         const answer = response.choices[0]?.message?.content;
