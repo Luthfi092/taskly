@@ -1,12 +1,25 @@
+/* ANALISIS INSTRUKSI TUGAS MENGGUNAKAN BACKEND */
 
-/* ANALISIS INSTRUKSI TUGAS MENGGUNAKAN GEMINI */
+async function analyze(userInstruction, uploadedFile = null) {
 
-async function analyze(text, uploadedFile = null) {
-
-    // Membuat FormData untuk mengirim teks dan file
     const formData = new FormData();
 
-    formData.append("text", text || "");
+    const cleanInstruction = (userInstruction || "").trim();
+    const docText = (uploadedFile && typeof extractedFileText === "string")
+        ? extractedFileText.trim()
+        : "";
+
+    let payloadText = "";
+
+    if (cleanInstruction && docText) {
+        payloadText = `INSTRUKSI USER:\n${cleanInstruction}\n\nISI DOKUMEN:\n${docText}`;
+    } else if (cleanInstruction) {
+        payloadText = cleanInstruction;
+    } else if (docText) {
+        payloadText = docText;
+    }
+
+    formData.append("text", payloadText);
 
     if (uploadedFile) {
         formData.append("file", uploadedFile);
@@ -33,7 +46,7 @@ async function analyze(text, uploadedFile = null) {
         !Array.isArray(result.steps)
     ) {
         throw new Error(
-            "Format hasil analisis Gemini tidak valid."
+            "Format hasil analisis tidak valid."
         );
     }
 
