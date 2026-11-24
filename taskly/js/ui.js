@@ -10,29 +10,23 @@
 $("go").onclick = async () => {
 
   const t = $("txt").value.trim();
-
-  // Mengambil file yang dipilih dari upload.js
   const selectedFile = uploadedTaskFile;
 
-  // Teks boleh kosong jika pengguna mengunggah file
-  if (t.length < 30 && !selectedFile) {
-
+  // Wajib ada file, atau minimal teks instruksi yang memadai jika tanpa file
+  if (!selectedFile && t.length < 15) {
     say(
-      "Instruksi terlalu pendek. Unggah file atau tempel teks tugas yang lengkap.",
+      "Tulis instruksi tugas terlebih dahulu atau unggah file PDF / Foto.",
       true
     );
-
     return;
-
   }
 
   $("go").disabled = true;
 
-  say("Menganalisis tugas menggunakan Groq...");
+  say("Menganalisis tugas...");
 
   try {
 
-    // Mengirim teks instruksi dan file ke backend
     const r = await analyze(t, selectedFile);
 
     state = {
@@ -98,83 +92,46 @@ function render() {
 
   $("result").style.display = "block";
 
-
-  // Ringkasan
-
   $("sum").textContent = state.summary;
-
-
-  // Deadline
 
   $("dl").textContent = state.deadline
     ? "Tenggat terdeteksi: " + state.deadline
     : "";
 
-
-  // Daftar pekerjaan
-
   $("tasks").innerHTML = "";
 
   state.tasks.forEach(t => {
-
     const li = document.createElement("li");
-
     li.textContent = t;
-
     $("tasks").appendChild(li);
-
   });
-
-
-  // Panduan pengerjaan
 
   $("steps").innerHTML = "";
 
   state.steps.forEach((s, i) => {
-
     const li = document.createElement("li");
-
     const cb = document.createElement("input");
-
     const lb = document.createElement("label");
 
-
     cb.type = "checkbox";
-
     cb.id = "s" + i;
-
     cb.checked = !!state.done[i];
 
-
     lb.htmlFor = cb.id;
-
     lb.textContent = s;
-
 
     li.className = cb.checked ? "done" : "";
 
-
-    // Event checkbox
-
     cb.onchange = () => {
-
       state.done[i] = cb.checked;
-
       li.className = cb.checked ? "done" : "";
-
       store.set(state);
-
       prog();
-
     };
 
-
     li.append(cb, lb);
-
     $("steps").appendChild(li);
-
   });
-
 
   prog();
 
@@ -188,16 +145,10 @@ function render() {
 function prog() {
 
   const n = state.done.filter(Boolean).length;
-
   const t = state.done.length;
-
-  const p = t
-    ? Math.round(n / t * 100)
-    : 0;
-
+  const p = t ? Math.round(n / t * 100) : 0;
 
   $("fill").style.width = p + "%";
-
 
   $("pct").textContent =
     n + " dari " + t +
@@ -214,9 +165,7 @@ function prog() {
 $("reset").onclick = () => {
 
   state.done = state.steps.map(() => false);
-
   store.set(state);
-
   render();
 
 };
@@ -238,7 +187,6 @@ $("result").style.display = "none";
 $("newtask").onclick = () => {
 
   clearUpload(true);
-
   $("txt").value = "";
 
   window.scrollTo({
